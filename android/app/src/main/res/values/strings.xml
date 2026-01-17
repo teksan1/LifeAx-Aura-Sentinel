@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">LifeAx</string>
+    <string name="title_activity_main">LifeAx</string>
+    <string name="package_name">im.manus.lifeax</string>
+    <string name="custom_url_scheme">im.manus.lifeax</string>
+</resources>
