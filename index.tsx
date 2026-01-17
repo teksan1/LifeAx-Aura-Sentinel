@@ -139,6 +139,8 @@ function App() {
   const [uiIntensity, setUiIntensity] = useState<number>(0.1);
   const [activeReport, setActiveReport] = useState<WeeklyReport | null>(null);
   const [isTherapyActive, setIsTherapyActive] = useState<boolean>(false);
+  const [clinicalReports, setClinicalReports] = useState<ClinicalReport[]>([]);
+  const [activeClinicalReport, setActiveClinicalReport] = useState<ClinicalReport | null>(null);
   
   // Auth state
   const [loginId, setLoginId] = useState('');
@@ -170,7 +172,6 @@ function App() {
             const savedSchedule = localStorage.getItem('sentinel_schedule');
             let currentSchedule: TemporalSchedule | null = savedSchedule ? JSON.parse(savedSchedule) : null;
             
-            // Data Decay Protocol: Purge friction logs older than 30 days to prevent bloat
             if (currentSchedule && currentSchedule.frictionLogs) {
                 const thirtyDaysAgo = Date.now() - 2592000000;
                 const freshLogs = currentSchedule.frictionLogs.filter(log => log.timestamp > thirtyDaysAgo);
@@ -179,14 +180,15 @@ function App() {
                     localStorage.setItem('sentinel_schedule', JSON.stringify(currentSchedule));
                 }
             }
-            
             setSchedule(currentSchedule);
             
-            // Check for Weekly Report
+            const savedReports = localStorage.getItem('clinical_reports');
+            if (savedReports) setClinicalReports(JSON.parse(savedReports));
+
             const lastReportTime = localStorage.getItem('last_report_time');
             const now = Date.now();
             if (!lastReportTime || now - parseInt(lastReportTime) > 604800000) {
-                generateWeeklyReport();
+                generateClinicalReport('weekly');
             }
             
             setActiveView('home');
@@ -195,6 +197,62 @@ function App() {
         }
     }
   }, []);
+
+  const generateClinicalReport = async (type: 'weekly' | 'monthly' | 'gp_summary') => {
+    if (!baseline || !schedule) return;
+    try {
+        const apiKey = getApiKey();
+        if (!apiKey) return;
+        const ai = new GoogleGenAI({ apiKey });
+        const model = ai.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+        
+        const context = `
+            Type: ${type}
+            User: ${baseline.name}
+            Goal: ${baseline.primaryGoal}
+            Friction Logs: ${JSON.stringify(schedule.frictionLogs || [])}
+            Previous Reports: ${JSON.stringify(clinicalReports.slice(-3))}
+        `;
+
+        const prompt = `Generate a ${type} Clinical Progress Report. 
+        Use semi-clinical, professional language as if written by a psychologist.
+        Include:
+        1. Behavioral patterns and mood stability assessment.
+        2. Progress toward strategic objectives.
+        3. Clinical markers (Mood Stability 0-100, Goal Alignment 0-100).
+        4. Risk assessment (especially if mental health conditions are suspected).
+        5. Future strategies.
+        
+        Context: ${context}
+        
+        Output ONLY a JSON object:
+        {
+            "content": "Full markdown formatted report text...",
+            "markers": {"moodStability": 0-100, "goalAlignment": 0-100, "riskAssessment": "Low/Medium/High - details"}
+        }`;
+
+        const result = await model.generateContent(prompt);
+        const text = result.response.text();
+        const jsonMatch = text.match(/\{.*\}/s);
+        if (jsonMatch) {
+            const data = JSON.parse(jsonMatch[0]);
+            const newReport: ClinicalReport = {
+                id: generateId(),
+                type,
+                dateGenerated: new Date().toLocaleDateString(),
+                content: data.content,
+                clinicalMarkers: data.markers
+            };
+            const updatedReports = [...clinicalReports, newReport];
+            setClinicalReports(updatedReports);
+            localStorage.setItem('clinical_reports', JSON.stringify(updatedReports));
+            localStorage.setItem('last_report_time', Date.now().toString());
+            setActiveClinicalReport(newReport);
+        }
+    } catch (e) {
+        console.error("Clinical Report Generation Failed", e);
+    }
+  };
 
   const generateWeeklyReport = async () => {
     if (!baseline || !schedule) return;
@@ -553,12 +611,45 @@ function App() {
 
             {isTherapyActive && (
                 <TherapySession 
+                    userBaseline={baseline}
                     onClose={() => setIsTherapyActive(false)}
-                    onComplete={(insight, state) => {
+                    onComplete={(insight, state, cbtData) => {
                         setIsTherapyActive(false);
-                        handleSendMessage(`THERAPY_INSIGHT: ${insight}. Emotional State: ${state}. Integrate this into my behavioral model.`);
+                        handleSendMessage(`THERAPY_INSIGHT: ${insight}. Emotional State: ${state}. CBT Analysis: ${JSON.stringify(cbtData)}. Integrate this into my behavioral model.`);
                     }}
                 />
+            )}
+
+            {activeClinicalReport && (
+                <div className="artifact-overlay">
+                    <div className="artifact-card clinical">
+                        <div className="artifact-header">
+                            <SparklesIcon />
+                            <h3>{activeClinicalReport.type.toUpperCase()} CLINICAL REPORT</h3>
+                            <button className="close-btn" onClick={() => setActiveClinicalReport(null)}>×</button>
+                        </div>
+                        <div className="artifact-body scroll-content" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+                            <div className="clinical-markers-grid">
+                                <div className="marker">
+                                    <label>Mood Stability</label>
+                                    <div className="score">{activeClinicalReport.clinicalMarkers.moodStability}%</div>
+                                </div>
+                                <div className="marker">
+                                    <label>Goal Alignment</label>
+                                    <div className="score">{activeClinicalReport.clinicalMarkers.goalAlignment}%</div>
+                                </div>
+                                <div className="marker full">
+                                    <label>Risk Assessment</label>
+                                    <div className="risk-tag">{activeClinicalReport.clinicalMarkers.riskAssessment}</div>
+                                </div>
+                            </div>
+                            <div className="clinical-content" dangerouslySetInnerHTML={{ __html: activeClinicalReport.content.replace(/\n/g, '<br/>') }} />
+                        </div>
+                        <div className="artifact-footer">
+                            <button className="download-btn" onClick={() => window.print()}>Export for Medical Professional</button>
+                        </div>
+                    </div>
+                </div>
             )}
 
             {activeView === 'auth' && (
@@ -603,6 +694,11 @@ function App() {
                             <div className="tile-icon"><SparklesIcon /></div>
                             <h3>Therapy</h3>
                             <p>Weekly psychological alignment and emotional regulation.</p>
+                        </div>
+                        <div className="home-tile" onClick={() => generateClinicalReport('gp_summary')}>
+                            <div className="tile-icon"><ArrowUpIcon /></div>
+                            <h3>GP Summary</h3>
+                            <p>Generate a comprehensive history for your medical professional.</p>
                         </div>
                     </div>
                 </div>

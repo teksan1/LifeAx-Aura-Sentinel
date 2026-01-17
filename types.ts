@@ -64,4 +64,20 @@ export interface TherapySession {
     transcript: { role: 'user' | 'sentinel'; text: string }[];
     coreInsight: string;
     emotionalState: string;
+    cbtAnalysis?: {
+        cognitiveDistortions: string[];
+        behavioralHomework: string;
+    };
+}
+
+export interface ClinicalReport {
+    id: string;
+    type: 'weekly' | 'monthly' | 'gp_summary';
+    dateGenerated: string;
+    content: string;
+    clinicalMarkers: {
+        moodStability: number;
+        goalAlignment: number;
+        riskAssessment: string;
+    };
 }

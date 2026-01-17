@@ -428,3 +428,31 @@ html, body {
     background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(99, 102, 241, 0.2) 100%);
 }
 .home-tile.special .tile-icon { color: #a855f7; }
+
+/* Clinical Report Styles */
+.artifact-card.clinical { max-width: 800px; }
+.clinical-markers-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 30px;
+}
+.marker {
+    background: rgba(255,255,255,0.03); padding: 20px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05);
+}
+.marker.full { grid-column: span 2; }
+.marker label { font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; display: block; margin-bottom: 8px; }
+.marker .score { font-size: 2rem; font-weight: 700; color: #a855f7; }
+.marker .risk-tag { font-size: 1.1rem; font-weight: 600; color: #ef4444; }
+.clinical-content {
+    font-family: 'Inter', sans-serif; line-height: 1.8; color: rgba(255,255,255,0.9); font-size: 1rem;
+}
+.download-btn {
+    background: #fff; color: #000; border: none; padding: 12px 24px; border-radius: 12px;
+    font-weight: 600; cursor: pointer; transition: 0.2s;
+}
+.download-btn:hover { background: #e2e2e2; }
+@media print {
+    .artifact-overlay { position: static; background: #fff; color: #000; }
+    .artifact-card { border: none; box-shadow: none; width: 100%; max-width: none; }
+    .artifact-header, .artifact-footer, .close-btn { display: none; }
+    .clinical-content { color: #000; }
+    .marker { border: 1px solid #ddd; color: #000; }
+}
