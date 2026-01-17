@@ -16,12 +16,13 @@ import DottedGlowBackground from './components/DottedGlowBackground';
 import SideDrawer from './components/SideDrawer';
 import FluidScheduler from './components/FluidScheduler';
 import ArtifactCard from './components/ArtifactCard';
+import TherapySession from './components/TherapySession';
 import { 
     SparklesIcon, 
     ArrowUpIcon, 
     GridIcon 
 } from './components/Icons';
-import { WeeklyReport } from './types';
+import { WeeklyReport, TherapySession as TherapySessionType } from './types';
 
 const DEFAULT_SETTINGS: AppSettings = {
     behavioralProbe: true,
@@ -137,6 +138,7 @@ function App() {
   const [schedule, setSchedule] = useState<TemporalSchedule | null>(null);
   const [uiIntensity, setUiIntensity] = useState<number>(0.1);
   const [activeReport, setActiveReport] = useState<WeeklyReport | null>(null);
+  const [isTherapyActive, setIsTherapyActive] = useState<boolean>(false);
   
   // Auth state
   const [loginId, setLoginId] = useState('');
@@ -549,6 +551,16 @@ function App() {
                 <ArtifactCard report={activeReport} onClose={() => setActiveReport(null)} />
             )}
 
+            {isTherapyActive && (
+                <TherapySession 
+                    onClose={() => setIsTherapyActive(false)}
+                    onComplete={(insight, state) => {
+                        setIsTherapyActive(false);
+                        handleSendMessage(`THERAPY_INSIGHT: ${insight}. Emotional State: ${state}. Integrate this into my behavioral model.`);
+                    }}
+                />
+            )}
+
             {activeView === 'auth' && (
                 <div className="auth-overlay">
                     <form className="auth-modal" onSubmit={handleAuth}>
@@ -586,6 +598,11 @@ function App() {
                             <div className="tile-icon"><GridIcon /></div>
                             <h3>Scheduler</h3>
                             <p>Visual temporal mapping based on dossier maturity.</p>
+                        </div>
+                        <div className="home-tile special" onClick={() => setIsTherapyActive(true)}>
+                            <div className="tile-icon"><SparklesIcon /></div>
+                            <h3>Therapy</h3>
+                            <p>Weekly psychological alignment and emotional regulation.</p>
                         </div>
                     </div>
                 </div>

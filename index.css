@@ -368,3 +368,63 @@ html, body {
     padding: 20px; text-align: center; border-top: 1px solid rgba(255,255,255,0.05);
     font-size: 0.7rem; color: var(--text-secondary); letter-spacing: 0.05em;
 }
+
+/* Therapy Session Styles */
+.therapy-overlay {
+    position: fixed; inset: 0; background: #030303; z-index: 8000;
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+}
+.therapy-container {
+    width: 100%; max-width: 700px; height: 85vh; background: #09090b;
+    border: 1px solid rgba(255,255,255,0.05); border-radius: 32px;
+    display: flex; flex-direction: column; overflow: hidden;
+    box-shadow: 0 0 100px rgba(168, 85, 247, 0.1);
+}
+.therapy-header {
+    padding: 24px 32px; border-bottom: 1px solid rgba(255,255,255,0.05);
+    display: flex; justify-content: space-between; align-items: center;
+}
+.header-info { display: flex; align-items: center; gap: 12px; }
+.header-info h3 { margin: 0; font-size: 1rem; letter-spacing: 0.1em; text-transform: uppercase; color: #a855f7; }
+
+.therapy-chat { flex: 1; overflow-y: auto; padding: 40px; display: flex; flex-direction: column; gap: 32px; }
+.therapy-message { display: flex; width: 100%; }
+.therapy-message.sentinel { justify-content: flex-start; }
+.therapy-message.user { justify-content: flex-end; }
+.therapy-message .message-bubble {
+    max-width: 80%; padding: 20px 24px; border-radius: 24px; font-size: 1.1rem; line-height: 1.6;
+}
+.sentinel .message-bubble { background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.9); border-bottom-left-radius: 4px; }
+.user .message-bubble { background: #fff; color: #000; border-bottom-right-radius: 4px; font-weight: 500; }
+
+.therapy-status { font-size: 0.8rem; color: #a855f7; opacity: 0.6; margin-top: -16px; margin-left: 40px; }
+
+.therapy-footer { padding: 32px; background: rgba(255,255,255,0.02); display: flex; flex-direction: column; gap: 20px; }
+.therapy-input-wrapper {
+    background: #111; border: 1px solid rgba(255,255,255,0.1); border-radius: 20px;
+    padding: 12px 12px 12px 24px; display: flex; align-items: center; gap: 16px;
+}
+.therapy-input-wrapper textarea {
+    flex: 1; background: transparent; border: none; outline: none; color: #fff;
+    font-size: 1rem; font-family: inherit; resize: none; height: 24px;
+}
+.therapy-input-wrapper button {
+    width: 40px; height: 40px; border-radius: 12px; border: none; background: #a855f7; color: #fff;
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.finish-session-btn {
+    background: transparent; border: 1px solid rgba(168, 85, 247, 0.3); color: #a855f7;
+    padding: 12px; border-radius: 12px; font-weight: 600; cursor: pointer; transition: 0.2s;
+}
+.finish-session-btn:hover { background: rgba(168, 85, 247, 0.1); }
+
+/* Special Therapy Tile */
+.home-tile.special {
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(99, 102, 241, 0.1) 100%);
+    border: 1px solid rgba(168, 85, 247, 0.3);
+}
+.home-tile.special:hover {
+    border-color: #a855f7;
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(99, 102, 241, 0.2) 100%);
+}
+.home-tile.special .tile-icon { color: #a855f7; }

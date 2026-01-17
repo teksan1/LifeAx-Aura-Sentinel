@@ -57,3 +57,11 @@ export interface WeeklyReport {
     pivotRecommendation: string;
     efficiencyScore: number;
 }
+
+export interface TherapySession {
+    id: string;
+    timestamp: number;
+    transcript: { role: 'user' | 'sentinel'; text: string }[];
+    coreInsight: string;
+    emotionalState: string;
+}
