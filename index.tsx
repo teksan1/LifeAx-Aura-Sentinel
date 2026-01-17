@@ -11,6 +11,7 @@ import SideDrawer from './components/SideDrawer';
 import FluidScheduler from './components/FluidScheduler';
 import ArtifactCard from './components/ArtifactCard';
 import TherapySession from './components/TherapySession';
+import SettingsMenu from './components/SettingsMenu';
 import { 
     SparklesIcon, 
     ArrowUpIcon, 
@@ -21,7 +22,17 @@ const DEFAULT_SETTINGS: AppSettings = {
     behavioralProbe: true,
     authorityLevel: 'mentor',
     syncInterval: 300,
-    privacyMode: 'vault'
+    privacyMode: 'vault',
+    theme: 'sentinel-dark',
+    notifications: true,
+    autoSync: true,
+    dataRetentionDays: 30,
+    uiIntensityEnabled: true,
+    vibrationFeedback: true,
+    language: 'English',
+    riskProfiling: true,
+    thinkingBudget: 100,
+    temperature: 0.7
 };
 
 const INITIAL_BASELINE: UserBaseline = {
@@ -49,7 +60,7 @@ const App = () => {
     title: 'System Arch'
   });
 
-  const [settings] = useState<AppSettings>(DEFAULT_SETTINGS);
+  const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [baseline, setBaseline] = useState<UserBaseline | null>(null);
   const [onboardingStep, setOnboardingStep] = useState<number>(0);
   const [tempBaseline, setTempBaseline] = useState<UserBaseline>(INITIAL_BASELINE);
@@ -497,40 +508,83 @@ const App = () => {
 
             {activeView === 'home' && (
                 <div className="home-page scroll-content">
-                    <div className="home-header"><h1>Aura Command</h1><p>Status: Synchronized with {baseline?.name}</p></div>
+                    <div className="home-header">
+                        <h1>Aura Sentinel</h1>
+                        <p>Welcome back, {baseline?.name || 'Agent'}</p>
+                    </div>
+                    
                     <div className="home-grid">
                         <div className="home-tile" onClick={() => setActiveView('chat')}>
                             <div className="tile-icon"><SparklesIcon /></div>
                             <h3>Intelligence</h3>
-                            <p>Direct behavioral probe and diagnostic routine mapping.</p>
+                            <p>Direct behavioral probe and AI dialogue.</p>
                         </div>
                         <div className="home-tile" onClick={() => setActiveView('scheduler')}>
                             <div className="tile-icon"><GridIcon /></div>
                             <h3>Scheduler</h3>
-                            <p>Visual temporal mapping based on dossier maturity.</p>
+                            <p>Visual temporal mapping and task management.</p>
                         </div>
                         <div className="home-tile special" onClick={() => setIsTherapyActive(true)}>
                             <div className="tile-icon"><SparklesIcon /></div>
                             <h3>Therapy</h3>
-                            <p>Weekly psychological alignment and emotional regulation.</p>
+                            <p>CBT-based psychological alignment.</p>
                         </div>
-                        <div className="home-tile" onClick={() => generateClinicalReport('gp_summary')}>
+                        <div className="home-tile" onClick={() => setActiveView('reports')}>
                             <div className="tile-icon"><ArrowUpIcon /></div>
-                            <h3>GP Summary</h3>
-                            <p>Generate a comprehensive history for your medical professional.</p>
+                            <h3>Clinical Reports</h3>
+                            <p>Weekly, monthly, and GP-ready summaries.</p>
+                        </div>
+                        <div className="home-tile" onClick={() => setActiveView('settings')}>
+                            <div className="tile-icon"><GridIcon /></div>
+                            <h3>Settings</h3>
+                            <p>System architecture and UI configuration.</p>
                         </div>
                     </div>
+                </div>
+            )}
 
-                    <div className="home-section">
-                        <h2>Active Dossier</h2>
-                        {baseline ? (
-                            <div className="baseline-summary">
-                                <p><strong>Identity:</strong> {baseline.name}</p>
-                                <p><strong>Objective:</strong> {baseline.primaryGoal}</p>
-                                <p><strong>Constraint:</strong> {baseline.mainBlocker}</p>
-                                <button className="reset-btn" onClick={() => { localStorage.clear(); purgeVault(); window.location.reload(); }}>Purge All Records</button>
-                            </div>
-                        ) : <p>Calibration Incomplete.</p>}
+            {activeView === 'settings' && (
+                <SettingsMenu 
+                    settings={settings}
+                    onSettingsChange={setSettings}
+                    baseline={baseline}
+                    onBaselineChange={(newBaseline) => {
+                        setBaseline(newBaseline);
+                        localStorage.setItem('sentinel_baseline', JSON.stringify(newBaseline));
+                    }}
+                    onPurge={() => {
+                        if(confirm("Are you sure? This will purge all behavioral data.")) {
+                            localStorage.clear();
+                            purgeVault();
+                            window.location.reload();
+                        }
+                    }}
+                />
+            )}
+
+            {activeView === 'reports' && (
+                <div className="reports-page scroll-content">
+                    <div className="home-header">
+                        <h1>Clinical Reports</h1>
+                        <button className="action-btn" onClick={() => generateClinicalReport('gp_summary')}>Generate GP Summary</button>
+                    </div>
+                    <div className="reports-list">
+                        {clinicalReports.length === 0 ? (
+                            <p className="empty-state">No reports generated yet. Complete your first week to see insights.</p>
+                        ) : (
+                            clinicalReports.map(report => (
+                                <div key={report.id} className="report-item" onClick={() => setActiveClinicalReport(report)}>
+                                    <div className="report-info">
+                                        <span className="report-type">{report.type.toUpperCase()}</span>
+                                        <span className="report-date">{report.dateGenerated}</span>
+                                    </div>
+                                    <div className="report-markers">
+                                        <span>Mood: {report.clinicalMarkers.moodStability}%</span>
+                                        <span>Goal: {report.clinicalMarkers.goalAlignment}%</span>
+                                    </div>
+                                </div>
+                            ))
+                        )}
                     </div>
                 </div>
             )}
@@ -606,6 +660,27 @@ const App = () => {
                 </div>
             )}
         </div>
+
+        {isAuthenticated && (
+            <div className="mobile-nav">
+                <button className={`mobile-nav-item ${activeView === 'home' ? 'active' : ''}`} onClick={() => setActiveView('home')}>
+                    <GridIcon />
+                    <span>Home</span>
+                </button>
+                <button className={`mobile-nav-item ${activeView === 'chat' ? 'active' : ''}`} onClick={() => setActiveView('chat')}>
+                    <SparklesIcon />
+                    <span>Chat</span>
+                </button>
+                <button className={`mobile-nav-item ${activeView === 'scheduler' ? 'active' : ''}`} onClick={() => setActiveView('scheduler')}>
+                    <GridIcon />
+                    <span>Schedule</span>
+                </button>
+                <button className={`mobile-nav-item ${activeView === 'settings' ? 'active' : ''}`} onClick={() => setActiveView('settings')}>
+                    <GridIcon />
+                    <span>Settings</span>
+                </button>
+            </div>
+        )}
     </>
   );
 };

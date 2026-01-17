@@ -21,9 +21,16 @@ export interface AppSettings {
     riskProfiling: boolean;
     thinkingBudget: number;
     temperature: number;
+    theme: 'sentinel-dark' | 'high-contrast' | 'midnight';
+    notifications: boolean;
+    autoSync: boolean;
+    dataRetentionDays: number;
+    uiIntensityEnabled: boolean;
+    vibrationFeedback: boolean;
+    language: string;
 }
 
-export type ViewType = 'home' | 'chat' | 'scheduler' | 'overview' | 'onboarding' | 'auth';
+export type ViewType = 'home' | 'chat' | 'scheduler' | 'overview' | 'onboarding' | 'auth' | 'settings' | 'reports' | 'therapy';
 
 export interface ScheduledTask {
     id: string;

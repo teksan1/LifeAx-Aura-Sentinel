@@ -8,8 +8,116 @@
     --text-secondary: #71717a;
     --border-color: #1a1a1e;
     --accent: #fff;
+    --accent-secondary: #a855f7;
     --error-red: #ef4444;
+    --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
 }
+
+@media (max-width: 768px) {
+    html { font-size: 14px; }
+    .main-nav { padding: 10px 15px; }
+    .nav-links { display: none; } /* Use bottom nav for mobile */
+    .home-grid { grid-template-columns: 1fr; gap: 15px; padding: 15px; }
+    .home-tile { padding: 20px; }
+    .chat-interface { height: calc(100vh - 120px); }
+    .scheduler-interface { padding: 10px; }
+}
+
+/* Mobile Bottom Navigation */
+.mobile-nav {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(3, 3, 3, 0.95);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid var(--border-color);
+    padding: 10px 20px calc(10px + var(--safe-area-inset-bottom));
+    justify-content: space-around;
+    z-index: 1000;
+}
+
+@media (max-width: 768px) {
+    .mobile-nav { display: flex; }
+    .immersive-app { padding-bottom: 80px; }
+}
+
+.mobile-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 0.7rem;
+    gap: 5px;
+}
+
+.mobile-nav-item.active { color: var(--accent-secondary); }
+.mobile-nav-item svg { width: 20px; height: 20px; }
+
+/* Settings Menu Styles */
+.settings-menu {
+    padding: 20px;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.settings-section {
+    margin-bottom: 30px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 20px;
+    padding: 20px;
+    border: 1px solid var(--border-color);
+}
+
+.settings-section h2 {
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--accent-secondary);
+    margin-bottom: 20px;
+}
+
+.setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    gap: 15px;
+}
+
+.setting-item label { font-size: 0.9rem; color: var(--text-primary); }
+
+.setting-item select, .setting-item input[type="text"], .setting-item input[type="number"], .setting-item textarea {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+}
+
+.setting-item.toggle input {
+    width: 40px;
+    height: 20px;
+    cursor: pointer;
+}
+
+.danger-btn {
+    width: 100%;
+    padding: 15px;
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.danger-btn:hover { background: rgba(239, 68, 68, 0.2); }
 
 html, body {
     height: 100%; margin: 0; padding: 0;
@@ -455,4 +563,25 @@ html, body {
     .artifact-header, .artifact-footer, .close-btn { display: none; }
     .clinical-content { color: #000; }
     .marker { border: 1px solid #ddd; color: #000; }
+}
+
+/* Reports Page Styles */
+.reports-list { display: flex; flex-direction: column; gap: 15px; margin-top: 20px; }
+.report-item {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+    padding: 20px;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.report-item:hover { background: rgba(255, 255, 255, 0.05); border-color: var(--accent-secondary); }
+.report-info { display: flex; justify-content: space-between; margin-bottom: 10px; }
+.report-type { font-size: 0.7rem; font-weight: 800; letter-spacing: 1px; color: var(--accent-secondary); }
+.report-date { font-size: 0.8rem; color: var(--text-secondary); }
+.report-markers { display: flex; gap: 20px; font-size: 0.9rem; font-weight: 600; }
+.empty-state { text-align: center; color: var(--text-secondary); padding: 40px; }
+.action-btn {
+    background: var(--accent-secondary); color: #fff; border: none; padding: 10px 20px;
+    border-radius: 10px; font-weight: 600; cursor: pointer;
 }
