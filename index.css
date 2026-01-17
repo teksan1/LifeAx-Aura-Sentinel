@@ -331,3 +331,40 @@ html, body {
 }
 .insight-card h4 { margin: 0; font-size: 1rem; color: #a855f7; }
 .insight-card p { margin: 4px 0 0; font-size: 0.85rem; color: rgba(255,255,255,0.6); }
+
+/* Artifact Card Styles */
+.artifact-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(10px);
+    display: flex; align-items: center; justify-content: center; z-index: 7000; padding: 20px;
+}
+.artifact-card {
+    background: #09090b; border: 1px solid rgba(255,255,255,0.1); border-radius: 24px;
+    width: 100%; max-width: 500px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+}
+.artifact-header {
+    padding: 24px; background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.05);
+    display: flex; align-items: center; gap: 12px; position: relative;
+}
+.artifact-header h3 { margin: 0; font-size: 1.1rem; letter-spacing: 0.05em; text-transform: uppercase; }
+.artifact-header .close-btn {
+    position: absolute; right: 20px; top: 20px; background: transparent; border: none;
+    color: #fff; font-size: 1.5rem; cursor: pointer; opacity: 0.5;
+}
+.artifact-body { padding: 30px; display: flex; flex-direction: column; gap: 24px; }
+.artifact-section label {
+    display: block; font-size: 0.7rem; color: var(--text-secondary);
+    text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; margin-bottom: 8px;
+}
+.artifact-section p { margin: 0; font-size: 0.95rem; line-height: 1.6; color: rgba(255,255,255,0.8); }
+.score-bar {
+    height: 8px; background: rgba(255,255,255,0.05); border-radius: 4px; overflow: hidden; margin-bottom: 8px;
+}
+.score-fill { height: 100%; background: linear-gradient(to right, #6366f1, #a855f7); border-radius: 4px; }
+.artifact-section.highlight {
+    background: rgba(168, 85, 247, 0.05); padding: 20px; border-radius: 16px; border: 1px solid rgba(168, 85, 247, 0.2);
+}
+.artifact-section.highlight p { color: #a855f7; font-weight: 500; }
+.artifact-footer {
+    padding: 20px; text-align: center; border-top: 1px solid rgba(255,255,255,0.05);
+    font-size: 0.7rem; color: var(--text-secondary); letter-spacing: 0.05em;
+}

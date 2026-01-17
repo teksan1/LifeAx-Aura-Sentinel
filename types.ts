@@ -36,8 +36,24 @@ export interface ScheduledTask {
     description?: string;
 }
 
+export interface FrictionLog {
+    taskId: string;
+    timestamp: number;
+    reason: string;
+    impact: 'low' | 'medium' | 'high';
+}
+
 export interface TemporalSchedule {
     date: string; // YYYY-MM-DD
     tasks: ScheduledTask[];
     cognitivePeaks: { start: string; end: string; intensity: number }[];
+    frictionLogs?: FrictionLog[];
+}
+
+export interface WeeklyReport {
+    id: string;
+    weekStarting: string;
+    summary: string;
+    pivotRecommendation: string;
+    efficiencyScore: number;
 }

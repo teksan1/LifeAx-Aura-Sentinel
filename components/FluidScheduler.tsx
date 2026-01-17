@@ -9,9 +9,11 @@ interface FluidSchedulerProps {
     onTaskDelete: (taskId: string) => void;
     onTaskAdd: (task: Omit<ScheduledTask, 'id'>) => void;
     onRegenerate: () => void;
+    onAddFriction: (taskId: string, reason: string) => void;
 }
 
-const FluidScheduler: React.FC<FluidSchedulerProps> = ({ schedule, onTaskUpdate, onTaskDelete, onTaskAdd, onRegenerate }) => {
+const FluidScheduler: React.FC<FluidSchedulerProps> = ({ schedule, onTaskUpdate, onTaskDelete, onTaskAdd, onRegenerate, onAddFriction }) => {
+    const [frictionTaskId, setFrictionTaskId] = useState<string | null>(null);
     const [isAdding, setIsAdding] = useState(false);
     const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
     const [viewMode, setViewMode] = useState<'24h' | 'weekly'>('24h');
@@ -41,6 +43,9 @@ const FluidScheduler: React.FC<FluidSchedulerProps> = ({ schedule, onTaskUpdate,
                             {task.status === 'completed' ? '↺' : '✓'}
                         </button>
                         <button className="action-btn delete" onClick={() => onTaskDelete(task.id)}>×</button>
+                        {task.status !== 'completed' && (
+                            <button className="action-btn friction" onClick={() => setFrictionTaskId(task.id)}>⚠</button>
+                        )}
                     </div>
                 </div>
             ))}
@@ -133,6 +138,26 @@ const FluidScheduler: React.FC<FluidSchedulerProps> = ({ schedule, onTaskUpdate,
             <div className="scheduler-content">
                 {viewMode === '24h' ? render24hView() : renderWeeklyView()}
             </div>
+
+            {frictionTaskId && (
+                <div className="add-task-modal">
+                    <div className="modal-content">
+                        <h4>Friction Log</h4>
+                        <p>Why was this block compromised?</p>
+                        <textarea id="friction-reason" placeholder="e.g., Unexpected meeting, low energy..." rows={3} style={{ background: '#111', border: '1px solid var(--border-color)', color: '#fff', padding: '12px', borderRadius: '10px' }} />
+                        <div className="modal-actions">
+                            <button onClick={() => setFrictionTaskId(null)}>Cancel</button>
+                            <button className="confirm" onClick={() => {
+                                const reason = (document.getElementById('friction-reason') as HTMLTextAreaElement).value;
+                                if (reason) {
+                                    onAddFriction(frictionTaskId, reason);
+                                    setFrictionTaskId(null);
+                                }
+                            }}>Log Friction</button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

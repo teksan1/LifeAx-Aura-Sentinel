@@ -15,11 +15,13 @@ import { getApiKey, storeApiKey, purgeVault } from './security';
 import DottedGlowBackground from './components/DottedGlowBackground';
 import SideDrawer from './components/SideDrawer';
 import FluidScheduler from './components/FluidScheduler';
+import ArtifactCard from './components/ArtifactCard';
 import { 
     SparklesIcon, 
     ArrowUpIcon, 
     GridIcon 
 } from './components/Icons';
+import { WeeklyReport } from './types';
 
 const DEFAULT_SETTINGS: AppSettings = {
     behavioralProbe: true,
@@ -133,6 +135,8 @@ function App() {
   const [onboardingStep, setOnboardingStep] = useState<number>(0);
   const [tempBaseline, setTempBaseline] = useState<UserBaseline>(INITIAL_BASELINE);
   const [schedule, setSchedule] = useState<TemporalSchedule | null>(null);
+  const [uiIntensity, setUiIntensity] = useState<number>(0.1);
+  const [activeReport, setActiveReport] = useState<WeeklyReport | null>(null);
   
   // Auth state
   const [loginId, setLoginId] = useState('');
@@ -162,7 +166,27 @@ function App() {
         if (savedBaseline) {
             setBaseline(JSON.parse(savedBaseline));
             const savedSchedule = localStorage.getItem('sentinel_schedule');
-            if (savedSchedule) setSchedule(JSON.parse(savedSchedule));
+            let currentSchedule: TemporalSchedule | null = savedSchedule ? JSON.parse(savedSchedule) : null;
+            
+            // Data Decay Protocol: Purge friction logs older than 30 days to prevent bloat
+            if (currentSchedule && currentSchedule.frictionLogs) {
+                const thirtyDaysAgo = Date.now() - 2592000000;
+                const freshLogs = currentSchedule.frictionLogs.filter(log => log.timestamp > thirtyDaysAgo);
+                if (freshLogs.length !== currentSchedule.frictionLogs.length) {
+                    currentSchedule = { ...currentSchedule, frictionLogs: freshLogs };
+                    localStorage.setItem('sentinel_schedule', JSON.stringify(currentSchedule));
+                }
+            }
+            
+            setSchedule(currentSchedule);
+            
+            // Check for Weekly Report
+            const lastReportTime = localStorage.getItem('last_report_time');
+            const now = Date.now();
+            if (!lastReportTime || now - parseInt(lastReportTime) > 604800000) {
+                generateWeeklyReport();
+            }
+            
             setActiveView('home');
         } else {
             setActiveView('onboarding');
@@ -170,11 +194,70 @@ function App() {
     }
   }, []);
 
+  const generateWeeklyReport = async () => {
+    if (!baseline || !schedule) return;
+    try {
+        const apiKey = getApiKey();
+        if (!apiKey) return;
+        const ai = new GoogleGenAI({ apiKey });
+        const model = ai.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+        
+        const prompt = `Generate a Weekly Strategic Intelligence Report for ${baseline.name}.
+        Goal: ${baseline.primaryGoal}.
+        Recent Friction: ${JSON.stringify(schedule.frictionLogs || [])}.
+        Output ONLY a JSON object: {"summary": "...", "pivotRecommendation": "...", "efficiencyScore": 0-100}`;
+
+        const result = await model.generateContent(prompt);
+        const text = result.response.text();
+        const jsonMatch = text.match(/\{.*\}/s);
+        if (jsonMatch) {
+            const data = JSON.parse(jsonMatch[0]);
+            const report: WeeklyReport = {
+                id: generateId(),
+                weekStarting: new Date().toLocaleDateString(),
+                ...data
+            };
+            setActiveReport(report);
+            localStorage.setItem('last_report_time', Date.now().toString());
+        }
+    } catch (e) {
+        console.error("Report Generation Failed", e);
+    }
+  };
+
   useEffect(() => {
     if (activeView === 'chat') {
         chatEndRef.current?.scrollIntoView({ behavior: 'auto' });
     }
   }, [messages, activeView]);
+
+  // UI Intensity Syncing
+  useEffect(() => {
+    const updateIntensity = () => {
+        if (!schedule) return;
+        const now = new Date();
+        const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+        const activeTask = schedule.tasks.find(t => {
+            const [h, m] = t.startTime.split(':').map(Number);
+            const start = h * 60 + m;
+            const end = start + t.duration;
+            const current = now.getHours() * 60 + now.getMinutes();
+            return current >= start && current < end;
+        });
+
+        if (activeTask) {
+            if (activeTask.type === 'deep-work') setUiIntensity(0.8);
+            else if (activeTask.type === 'strategic') setUiIntensity(0.6);
+            else if (activeTask.type === 'routine') setUiIntensity(0.3);
+            else setUiIntensity(0.1);
+        } else {
+            setUiIntensity(0.1);
+        }
+    };
+    const interval = setInterval(updateIntensity, 60000);
+    updateIntensity();
+    return () => clearInterval(interval);
+  }, [schedule]);
 
   const startCooldown = useCallback((seconds: number) => {
     setCooldown(seconds);
@@ -460,7 +543,11 @@ function App() {
         )}
 
         <div className="immersive-app">
-            <DottedGlowBackground gap={24} speedScale={0.1} />
+            <DottedGlowBackground gap={24} speedScale={uiIntensity} opacity={0.5 + uiIntensity * 0.5} />
+
+            {activeReport && (
+                <ArtifactCard report={activeReport} onClose={() => setActiveReport(null)} />
+            )}
 
             {activeView === 'auth' && (
                 <div className="auth-overlay">
@@ -543,6 +630,19 @@ function App() {
                             localStorage.setItem('sentinel_schedule', JSON.stringify(newSchedule));
                         }}
                         onRegenerate={generateSchedule}
+                        onAddFriction={(taskId, reason) => {
+                            if (!schedule) return;
+                            const newLog = { taskId, reason, timestamp: Date.now(), impact: 'medium' as const };
+                            const newSchedule = { 
+                                ...schedule, 
+                                frictionLogs: [...(schedule.frictionLogs || []), newLog] 
+                            };
+                            setSchedule(newSchedule);
+                            localStorage.setItem('sentinel_schedule', JSON.stringify(newSchedule));
+                            
+                            // Trigger AI learning from friction
+                            handleSendMessage(`SYSTEM_LOG: Friction detected in task ${taskId}. Reason: ${reason}. Analyze and adjust future temporal mapping.`);
+                        }}
                     />
                 </div>
             )}
