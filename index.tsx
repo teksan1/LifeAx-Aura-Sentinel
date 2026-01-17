@@ -10,6 +10,7 @@ import ReactDOM from 'react-dom/client';
 
 import { AppSettings, ViewType, UserBaseline, TemporalSchedule, ScheduledTask } from './types';
 import { generateId } from './utils';
+import { getApiKey, storeApiKey, purgeVault } from './security';
 
 import DottedGlowBackground from './components/DottedGlowBackground';
 import SideDrawer from './components/SideDrawer';
@@ -205,10 +206,15 @@ function App() {
 
   const generateSchedule = async () => {
     if (!baseline) return;
+    const apiKey = getApiKey();
+    if (!apiKey) {
+        setApiError("Identity Core Key Missing. Please re-authenticate.");
+        return;
+    }
     setIsLoading(true);
     setStatusText('Synthesizing Temporal Map...');
     try {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+        const ai = new GoogleGenAI({ apiKey });
         const model = ai.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
         
         const prompt = `Generate a fluid 24-hour schedule for ${baseline.name}. 
@@ -250,7 +256,9 @@ function App() {
     setStatusText(attempt > 0 ? `Re-routing via ${currentModel}...` : 'Processing...');
 
     try {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+        const apiKey = getApiKey();
+        if (!apiKey) throw new Error("API_KEY_MISSING");
+        const ai = new GoogleGenAI({ apiKey });
         const authorityText = baseline?.authorityPreference === 'mentor' ? "authoritative mentor" : "advisory guide";
         const baselineContext = baseline ? 
             `USER DOSSIER: Identity: ${baseline.name}, Focus: ${baseline.primaryGoal}, Constraint: ${baseline.mainBlocker}.` : 
@@ -316,7 +324,9 @@ function App() {
             fullResponse.toLowerCase().includes('plan')) {
             
             setStatusText('Analyzing Temporal Impact...');
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+            const apiKey = getApiKey();
+            if (!apiKey) return;
+            const ai = new GoogleGenAI({ apiKey });
             const model = ai.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
             
             const syncPrompt = `Current Schedule: ${JSON.stringify(schedule?.tasks)}
@@ -430,7 +440,7 @@ function App() {
                             <p><strong>Identity:</strong> {baseline.name}</p>
                             <p><strong>Objective:</strong> {baseline.primaryGoal}</p>
                             <p><strong>Constraint:</strong> {baseline.mainBlocker}</p>
-                            <button className="reset-btn" onClick={() => { localStorage.clear(); window.location.reload(); }}>Purge All Records</button>
+                            <button className="reset-btn" onClick={() => { localStorage.clear(); purgeVault(); window.location.reload(); }}>Purge All Records</button>
                         </div>
                     ) : <p>Calibration Incomplete.</p>}
                 </div>
