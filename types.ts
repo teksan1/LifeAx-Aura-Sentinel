@@ -31,6 +31,24 @@ export interface AppSettings {
     locationTracking: boolean;
     acousticMonitoring: boolean;
     financialEnforcement: boolean;
+    enterpriseMode: boolean;
+    biometricLock: boolean;
+    auditLogging: boolean;
+}
+
+export interface AuditLog {
+    id: string;
+    timestamp: number;
+    action: string;
+    category: 'security' | 'behavioral' | 'system';
+    severity: 'info' | 'warning' | 'critical';
+}
+
+export interface StrategicMetric {
+    label: string;
+    value: number;
+    trend: number; // percentage
+    status: 'optimal' | 'warning' | 'critical';
 }
 
 export interface FinancialAccount {

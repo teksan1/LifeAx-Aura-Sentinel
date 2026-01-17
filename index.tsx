@@ -13,6 +13,7 @@ import ArtifactCard from './components/ArtifactCard';
 import TherapySession from './components/TherapySession';
 import SettingsMenu from './components/SettingsMenu';
 import FinancialCore from './components/FinancialCore';
+import EnterpriseDashboard from './components/EnterpriseDashboard';
 import { 
     SparklesIcon, 
     ArrowUpIcon, 
@@ -74,6 +75,8 @@ const App = () => {
   const [financialAccounts, setFinancialAccounts] = useState<FinancialAccount[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [locationRisk, setLocationRisk] = useState<number>(0);
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
+  const [strategicMetrics, setStrategicMetrics] = useState<StrategicMetric[]>([]);
   
   // Auth state
   const [loginId, setLoginId] = useState('');
@@ -121,6 +124,16 @@ const App = () => {
                 setBudgets(initialBudgets);
             }
 
+            const savedAudit = localStorage.getItem('sentinel_audit');
+            if (savedAudit) setAuditLogs(JSON.parse(savedAudit));
+
+            setStrategicMetrics([
+                { label: 'Operational Efficiency', value: 84, trend: 12, status: 'optimal' },
+                { label: 'Cognitive Load', value: 62, trend: -5, status: 'warning' },
+                { label: 'Financial Integrity', value: 91, trend: 3, status: 'optimal' },
+                { label: 'Strategic Alignment', value: 78, trend: 8, status: 'optimal' }
+            ]);
+
             const lastReportTime = localStorage.getItem('last_report_time');
             const now = Date.now();
             if (!lastReportTime || now - parseInt(lastReportTime) > 604800000) {
@@ -133,6 +146,21 @@ const App = () => {
         }
     }
   }, []);
+
+  const addAuditLog = (action: string, category: AuditLog['category'], severity: AuditLog['severity']) => {
+    const newLog: AuditLog = {
+        id: Math.random().toString(36).substr(2, 9),
+        timestamp: Date.now(),
+        action,
+        category,
+        severity
+    };
+    setAuditLogs(prev => {
+        const updated = [newLog, ...prev].slice(0, 100);
+        localStorage.setItem('sentinel_audit', JSON.stringify(updated));
+        return updated;
+    });
+  };
 
   const generateClinicalReport = async (type: 'weekly' | 'monthly' | 'gp_summary') => {
     if (!baseline || !schedule) return;
@@ -524,45 +552,11 @@ const App = () => {
             )}
 
             {activeView === 'home' && (
-                <div className="home-page scroll-content">
-                    <div className="home-header">
-                        <h1>Aura Sentinel</h1>
-                        <p>Welcome back, {baseline?.name || 'Agent'}</p>
-                    </div>
-                    
-                    <div className="home-grid">
-                        <div className="home-tile" onClick={() => setActiveView('chat')}>
-                            <div className="tile-icon"><SparklesIcon /></div>
-                            <h3>Intelligence</h3>
-                            <p>Direct behavioral probe and AI dialogue.</p>
-                        </div>
-                        <div className="home-tile" onClick={() => setActiveView('scheduler')}>
-                            <div className="tile-icon"><GridIcon /></div>
-                            <h3>Scheduler</h3>
-                            <p>Visual temporal mapping and task management.</p>
-                        </div>
-                        <div className="home-tile special" onClick={() => setIsTherapyActive(true)}>
-                            <div className="tile-icon"><SparklesIcon /></div>
-                            <h3>Therapy</h3>
-                            <p>CBT-based psychological alignment.</p>
-                        </div>
-                        <div className="home-tile" onClick={() => setActiveView('reports')}>
-                            <div className="tile-icon"><ArrowUpIcon /></div>
-                            <h3>Clinical Reports</h3>
-                            <p>Weekly, monthly, and GP-ready summaries.</p>
-                        </div>
-                        <div className="home-tile" onClick={() => setActiveView('finance')}>
-                            <div className="tile-icon"><ArrowUpIcon /></div>
-                            <h3>Finance</h3>
-                            <p>Sovereign budgeting and bank enforcement.</p>
-                        </div>
-                        <div className="home-tile" onClick={() => setActiveView('settings')}>
-                            <div className="tile-icon"><GridIcon /></div>
-                            <h3>Settings</h3>
-                            <p>System architecture and UI configuration.</p>
-                        </div>
-                    </div>
-                </div>
+                <EnterpriseDashboard 
+                    metrics={strategicMetrics}
+                    auditLogs={auditLogs}
+                    onNavigate={setActiveView}
+                />
             )}
 
             {activeView === 'finance' && (
