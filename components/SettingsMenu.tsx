@@ -69,6 +69,34 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ settings, onSettingsChange,
             </div>
 
             <div className="settings-section">
+                <h2>Advanced Intelligence</h2>
+                <div className="setting-item toggle">
+                    <label>Live Location Risk Engine</label>
+                    <input 
+                        type="checkbox" 
+                        checked={settings.locationTracking} 
+                        onChange={e => onSettingsChange({...settings, locationTracking: e.target.checked})}
+                    />
+                </div>
+                <div className="setting-item toggle">
+                    <label>Acoustic Behavioral Monitor</label>
+                    <input 
+                        type="checkbox" 
+                        checked={settings.acousticMonitoring} 
+                        onChange={e => onSettingsChange({...settings, acousticMonitoring: e.target.checked})}
+                    />
+                </div>
+                <div className="setting-item toggle">
+                    <label>Financial Enforcement</label>
+                    <input 
+                        type="checkbox" 
+                        checked={settings.financialEnforcement} 
+                        onChange={e => onSettingsChange({...settings, financialEnforcement: e.target.checked})}
+                    />
+                </div>
+            </div>
+
+            <div className="settings-section">
                 <h2>Data & Privacy</h2>
                 <div className="setting-item">
                     <label>Data Retention (Days)</label>

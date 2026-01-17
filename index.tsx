@@ -12,6 +12,7 @@ import FluidScheduler from './components/FluidScheduler';
 import ArtifactCard from './components/ArtifactCard';
 import TherapySession from './components/TherapySession';
 import SettingsMenu from './components/SettingsMenu';
+import FinancialCore from './components/FinancialCore';
 import { 
     SparklesIcon, 
     ArrowUpIcon, 
@@ -70,6 +71,9 @@ const App = () => {
   const [isTherapyActive, setIsTherapyActive] = useState<boolean>(false);
   const [clinicalReports, setClinicalReports] = useState<ClinicalReport[]>([]);
   const [activeClinicalReport, setActiveClinicalReport] = useState<ClinicalReport | null>(null);
+  const [financialAccounts, setFinancialAccounts] = useState<FinancialAccount[]>([]);
+  const [budgets, setBudgets] = useState<Budget[]>([]);
+  const [locationRisk, setLocationRisk] = useState<number>(0);
   
   // Auth state
   const [loginId, setLoginId] = useState('');
@@ -103,6 +107,19 @@ const App = () => {
             
             const savedReports = localStorage.getItem('clinical_reports');
             if (savedReports) setClinicalReports(JSON.parse(savedReports));
+            
+            const savedFinance = localStorage.getItem('sentinel_finance');
+            if (savedFinance) {
+                const { accounts, budgets } = JSON.parse(savedFinance);
+                setFinancialAccounts(accounts);
+                setBudgets(budgets);
+            } else {
+                const initialBudgets: Budget[] = [
+                    { category: 'Strategic Investment', limit: 1000, spent: 200, period: 'monthly', enforcementLevel: 'advisory' },
+                    { category: 'Friction (Alcohol/Distraction)', limit: 200, spent: 50, period: 'weekly', enforcementLevel: 'lockdown' }
+                ];
+                setBudgets(initialBudgets);
+            }
 
             const lastReportTime = localStorage.getItem('last_report_time');
             const now = Date.now();
@@ -534,6 +551,11 @@ const App = () => {
                             <h3>Clinical Reports</h3>
                             <p>Weekly, monthly, and GP-ready summaries.</p>
                         </div>
+                        <div className="home-tile" onClick={() => setActiveView('finance')}>
+                            <div className="tile-icon"><ArrowUpIcon /></div>
+                            <h3>Finance</h3>
+                            <p>Sovereign budgeting and bank enforcement.</p>
+                        </div>
                         <div className="home-tile" onClick={() => setActiveView('settings')}>
                             <div className="tile-icon"><GridIcon /></div>
                             <h3>Settings</h3>
@@ -541,6 +563,23 @@ const App = () => {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {activeView === 'finance' && (
+                <FinancialCore 
+                    accounts={financialAccounts}
+                    budgets={budgets}
+                    onUpdateBudget={(cat, amt) => {
+                        const newBudgets = budgets.map(b => b.category === cat ? { ...b, spent: amt } : b);
+                        setBudgets(newBudgets);
+                        localStorage.setItem('sentinel_finance', JSON.stringify({ accounts: financialAccounts, budgets: newBudgets }));
+                    }}
+                    onAddAccount={(acc) => {
+                        const newAccounts = [...financialAccounts, acc];
+                        setFinancialAccounts(newAccounts);
+                        localStorage.setItem('sentinel_finance', JSON.stringify({ accounts: newAccounts, budgets }));
+                    }}
+                />
             )}
 
             {activeView === 'settings' && (

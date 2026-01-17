@@ -28,6 +28,42 @@ export interface AppSettings {
     uiIntensityEnabled: boolean;
     vibrationFeedback: boolean;
     language: string;
+    locationTracking: boolean;
+    acousticMonitoring: boolean;
+    financialEnforcement: boolean;
+}
+
+export interface FinancialAccount {
+    id: string;
+    name: string;
+    balance: number;
+    currency: string;
+    type: 'checking' | 'savings' | 'credit';
+}
+
+export interface Budget {
+    category: string;
+    limit: number;
+    spent: number;
+    period: 'weekly' | 'monthly';
+    enforcementLevel: 'advisory' | 'strict' | 'lockdown';
+}
+
+export interface LocationRiskZone {
+    id: string;
+    name: string;
+    type: 'business' | 'distraction' | 'neutral';
+    coordinates: { lat: number; lng: number };
+    radius: number; // meters
+    riskFactor: number; // 0-1
+}
+
+export interface AcousticEvent {
+    timestamp: number;
+    type: 'order' | 'voice_pattern' | 'ambient';
+    content: string;
+    detectedSubstance?: string;
+    estimatedCost?: number;
 }
 
 export type ViewType = 'home' | 'chat' | 'scheduler' | 'overview' | 'onboarding' | 'auth' | 'settings' | 'reports' | 'therapy';
